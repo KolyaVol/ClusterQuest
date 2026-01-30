@@ -45,8 +45,8 @@ export class GameLogic {
       .map(() => Array(width).fill(false));
     const clusters: Cluster[] = [];
 
-    for (let y = 0; y < eight; y++) {
-      for (let x = 0; x < wihdth; x++) {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
         if (!visited[y][x]) {
           const cluster = this.floodFill(field, visited, x, y);
           if (cluster.cells.length >= this.config.minClusterSize) {
