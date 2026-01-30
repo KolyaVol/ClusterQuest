@@ -8,10 +8,7 @@ const config = {
 };
 
 const gameLogic = new GameLogic(config);
-
-const field = gameLogic.generateField();
-gameLogic.logField(field);
-
-const clusters = gameLogic.findClusters(field);
-
-gameLogic.logClusters(clusters);
+const grid = gameLogic.createGrid();
+const clusters = gameLogic.findClusters(grid);
+console.log(grid.toArray());
+console.log(clusters);

@@ -1,3 +1,6 @@
+import { Grid } from "./Grid";
+import { Cell } from "./Cell";
+
 export interface GameConfig {
   fieldWidth: number;
   fieldHeight: number;
@@ -12,7 +15,7 @@ export interface Position {
 
 export interface Cluster {
   iconType: number;
-  cells: Position[];
+  cells: Cell[];
 }
 
 export class GameLogic {
@@ -22,34 +25,28 @@ export class GameLogic {
     this.config = config;
   }
 
-  generateField(): number[][] {
-    const field: number[][] = [];
-
-    for (let row = 0; row < this.config.fieldHeight; row++) {
-      const rowData: number[] = [];
-      for (let col = 0; col < this.config.fieldWidth; col++) {
-        const randomIcon = Math.floor(Math.random() * this.config.iconTypes);
-        rowData.push(randomIcon);
-      }
-      field.push(rowData);
-    }
-
-    return field;
+  createGrid(): Grid {
+    return new Grid(
+      this.config.fieldWidth,
+      this.config.fieldHeight,
+      this.config.iconTypes,
+    );
   }
 
-  findClusters(field: number[][]): Cluster[] {
-    const height = field.length;
-    const width = field[0]?.length || 0;
-    const visited: boolean[][] = Array(height)
+  findClusters(grid: Grid): Cluster[] {
+    const visited: boolean[][] = Array(grid.height)
       .fill(null)
-      .map(() => Array(width).fill(false));
+      .map(() => Array(grid.width).fill(false));
     const clusters: Cluster[] = [];
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
+    grid.reset();
+
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
         if (!visited[y][x]) {
-          const cluster = this.floodFill(field, visited, x, y);
+          const cluster = this.floodFill(grid, visited, x, y);
           if (cluster.cells.length >= this.config.minClusterSize) {
+            cluster.cells.forEach((cell) => cell.markAsCluster());
             clusters.push(cluster);
           }
         }
@@ -60,22 +57,22 @@ export class GameLogic {
   }
 
   private floodFill(
-    field: number[][],
+    grid: Grid,
     visited: boolean[][],
     startX: number,
     startY: number,
   ): Cluster {
-    const iconType = field[startY][startX];
-    const cells: Position[] = [];
+    const startCell = grid.getCellAt(startX, startY)!;
+    const iconType = startCell.iconType;
+    const cells: Cell[] = [];
     const queue: Position[] = [{ x: startX, y: startY }];
-    const height = field.length;
-    const width = field[0].length;
 
     visited[startY][startX] = true;
 
     while (queue.length > 0) {
       const { x, y } = queue.shift()!;
-      cells.push({ x, y });
+      const cell = grid.getCellAt(x, y)!;
+      cells.push(cell);
 
       const neighbors = [
         { x: x - 1, y },
@@ -89,37 +86,20 @@ export class GameLogic {
 
         if (
           nx >= 0 &&
-          nx < width &&
+          nx < grid.width &&
           ny >= 0 &&
-          ny < height &&
-          !visited[ny][nx] &&
-          field[ny][nx] === iconType
+          ny < grid.height &&
+          !visited[ny][nx]
         ) {
-          visited[ny][nx] = true;
-          queue.push({ x: nx, y: ny });
+          const neighborCell = grid.getCellAt(nx, ny)!;
+          if (neighborCell.iconType === iconType) {
+            visited[ny][nx] = true;
+            queue.push({ x: nx, y: ny });
+          }
         }
       }
     }
 
     return { iconType, cells };
-  }
-
-  logField(field: number[][]): void {
-    console.log(`Field ${this.config.fieldWidth}x${this.config.fieldHeight}:`);
-    field.forEach((row, index) => {
-      console.log(`Row ${index}: [${row.join(", ")}]`);
-    });
-  }
-
-  logClusters(clusters: Cluster[]): void {
-    console.log(`Found ${clusters.length} cluster(s):`);
-    clusters.forEach((cluster, index) => {
-      const positions = cluster.cells
-        .map((cell) => `(${cell.x},${cell.y})`)
-        .join(", ");
-      console.log(
-        `Cluster ${index + 1} (icon: ${cluster.iconType}): [${positions}] - size: ${cluster.cells.length}`,
-      );
-    });
   }
 }
