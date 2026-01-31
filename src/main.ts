@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import { GameLogic } from "./game/GameLogic";
 import { GameRenderer } from "./game/GameRenderer";
+import { GameController, GameState } from "./game/GameController";
 
 const config = {
   fieldWidth: 7,
@@ -24,12 +24,18 @@ async function init() {
     container.appendChild(app.canvas);
   }
 
-  const gameLogic = new GameLogic(config);
   const renderer = new GameRenderer(app);
+  const controller = new GameController(config, renderer);
 
-  const grid = gameLogic.createGrid();
-  gameLogic.findClusters(grid);
-  renderer.renderGrid(grid);
+  const startButton = document.getElementById("start-button");
+  if (startButton) {
+    startButton.addEventListener("click", () => {
+      if (controller.getState() === GameState.SHOWING_CLUSTERS) {
+        controller.reset();
+      }
+      controller.start();
+    });
+  }
 }
 
 init();
