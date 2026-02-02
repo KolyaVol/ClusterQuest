@@ -4,7 +4,9 @@ import { Cluster } from "./GameLogic";
 import { AnimationManager } from "./animations/AnimationUtils";
 
 interface CellDisplay {
+  container: PIXI.Container;
   graphics: PIXI.Graphics;
+  sprite?: PIXI.Sprite;
   text?: PIXI.Text;
   stopPulse?: () => void;
 }
@@ -16,15 +18,17 @@ export class GameRenderer {
   private cellSize: number = 60;
   private cellSpacing: number = 4;
   private colors: number[] = [
-    0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da, 0xfcbad3,
-    0xa8e6cf,
+    0xffb3ba, 0xb4a7d6, 0xbae1c3, 0xd4a5f5, 0xffc0e0, 0xa7e7d6, 0xb3e0ff,
+    0x9ce5f4,
   ];
   private strokeColors: number[] = [
-    0xc41e3a, 0x006b6b, 0xff8c00, 0x008b8b, 0xdc143c, 0x6a0dad, 0xff1493,
-    0x2e8b57,
+    0xffd700, 0xffb900, 0xffa500, 0xffcc00, 0xffe135, 0xffc300, 0xffd93d,
+    0xffaa00,
   ];
   private clusterTextStyle: PIXI.TextStyle;
   private cellDisplays: Map<string, CellDisplay> = new Map();
+  private spritesheet: PIXI.Spritesheet | null = null;
+  private iconNames: string[] = ["gem", "potion", "sword", "scroll", "bow"];
 
   constructor(app: PIXI.Application) {
     this.app = app;
@@ -40,6 +44,11 @@ export class GameRenderer {
       stroke: 0x000000,
       align: "center",
     });
+  }
+
+  async loadAssets(): Promise<void> {
+    PIXI.Assets.add({ alias: "icons", src: "icons.json" });
+    this.spritesheet = await PIXI.Assets.load("icons");
   }
 
   renderGrid(grid: Grid, clusters: Cluster[] = []): void {
@@ -64,6 +73,8 @@ export class GameRenderer {
     for (let y = 0; y < grid.height; y++) {
       for (let x = 0; x < grid.width; x++) {
         const cell = grid.getCellAt(x, y)!;
+        const cellContainer = new PIXI.Container();
+        cellContainer.pivot.set(30, 30);
         const cellGraphics = new PIXI.Graphics();
 
         const isInCluster = clusterCells.has(`${x},${y}`);
@@ -81,10 +92,31 @@ export class GameRenderer {
           cellGraphics.stroke({ width: 3, color: strokeColor });
         }
 
-        cellGraphics.position.set(posX, posY);
-        this.container.addChild(cellGraphics);
+        cellContainer.position.set(posX, posY);
+        cellContainer.addChild(cellGraphics);
 
-        const cellDisplay: CellDisplay = { graphics: cellGraphics };
+        const cellDisplay: CellDisplay = {
+          container: cellContainer,
+          graphics: cellGraphics,
+        };
+
+        if (this.spritesheet) {
+          const iconName =
+            this.iconNames[cell.iconType % this.iconNames.length];
+          const sprite = new PIXI.Sprite(this.spritesheet.textures[iconName]);
+
+          const scale = Math.min(
+            (this.cellSize * 0.65) / sprite.width,
+            (this.cellSize * 0.65) / sprite.height,
+          );
+          sprite.scale.set(scale);
+
+          sprite.anchor.set(0.5);
+          sprite.position.set(this.cellSize / 2, this.cellSize / 2);
+
+          cellContainer.addChild(sprite);
+          cellDisplay.sprite = sprite;
+        }
 
         if (isInCluster) {
           const text = new PIXI.Text({
@@ -92,48 +124,39 @@ export class GameRenderer {
             style: this.clusterTextStyle,
           });
           text.anchor.set(0.5);
-          text.position.set(posX + this.cellSize / 2, posY + this.cellSize / 2);
-          this.container.addChild(text);
+          text.position.set(this.cellSize / 2, this.cellSize / 2);
+          // cellContainer.addChild(text);
           cellDisplay.text = text;
 
           const stopPulse = this.animationManager.animatePulse(
-            cellGraphics,
+            cellContainer,
             0.98,
             1.02,
             1200,
           );
           cellDisplay.stopPulse = stopPulse;
+        } else {
+          cellContainer.alpha = 0.5;
         }
 
+        this.container.addChild(cellContainer);
         this.cellDisplays.set(`${x},${y}`, cellDisplay);
 
         const delay = (x + y) * 15;
         this.animationManager.animateScaleInDelayed(
-          cellGraphics,
+          cellContainer,
           delay,
           300,
           0,
           1,
         );
-        if (cellDisplay.text) {
-          this.animationManager.animateScaleInDelayed(
-            cellDisplay.text,
-            delay,
-            300,
-            0,
-            1,
-          );
-        }
       }
     }
   }
 
   private fadeOutCurrentGrid(): void {
     this.cellDisplays.forEach((cellDisplay) => {
-      this.animationManager.animateFadeOut(cellDisplay.graphics, 200);
-      if (cellDisplay.text) {
-        this.animationManager.animateFadeOut(cellDisplay.text, 200);
-      }
+      this.animationManager.animateFadeOut(cellDisplay.container, 200);
     });
   }
 

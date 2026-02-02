@@ -89,6 +89,9 @@ export class AnimationManager {
     endScale: number = 1,
     easing: (t: number) => number = easeOutBack,
   ): void {
+    const targetScale =
+      object.scale.x !== 1 && endScale === 1 ? object.scale.x : endScale;
+
     object.scale.set(startScale);
     object.alpha = 0;
 
@@ -97,7 +100,7 @@ export class AnimationManager {
       startTime: performance.now(),
       duration,
       startValue: startScale,
-      endValue: endScale,
+      endValue: targetScale,
       property: "scale",
       easing,
     });
@@ -119,16 +122,18 @@ export class AnimationManager {
     maxScale: number = 1.05,
     duration: number = 1000,
   ): () => void {
+    const baseScale = object.scale.x === 0 ? 1 : object.scale.x;
+
     this.pulseAnimations.set(object, {
       startTime: performance.now(),
-      minScale,
-      maxScale,
+      minScale: minScale * baseScale,
+      maxScale: maxScale * baseScale,
       duration,
     });
 
     return () => {
       this.pulseAnimations.delete(object);
-      object.scale.set(1);
+      object.scale.set(baseScale);
     };
   }
 

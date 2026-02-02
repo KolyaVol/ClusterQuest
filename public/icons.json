@@ -1,0 +1,48 @@
+{"frames": { 
+
+"bow": 
+{
+    "frame": { "x":2,"y":232,"w":136,"h":122}, 
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":21,"w":136,"h":122},
+	"sourceSize": {"w":164,"h":164}
+}, 
+"gem": 
+{
+    "frame": { "x":2,"y":2,"w":131,"h":101}, 
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":16,"y":31,"w":131,"h":101},
+	"sourceSize": {"w":164,"h":164}
+}, 
+"potion": 
+{
+    "frame": { "x":135,"y":2,"w":103,"h":133}, 
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":30,"y":15,"w":103,"h":133},
+	"sourceSize": {"w":164,"h":164}
+}, 
+"scroll": 
+{
+    "frame": { "x":130,"y":137,"w":146,"h":115}, 
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":9,"y":24,"w":146,"h":115},
+	"sourceSize": {"w":164,"h":164}
+}, 
+"sword": 
+{
+    "frame": { "x":2,"y":105,"w":126,"h":125}, 
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":19,"y":19,"w":126,"h":125},
+	"sourceSize": {"w":164,"h":164}
+}},
+"meta": {
+    "image": "icons.png",
+	"size": {"w":247,"h":370},
+    "scale": "1"
+}
+}

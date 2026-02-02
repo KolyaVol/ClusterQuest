@@ -25,6 +25,7 @@ async function init() {
   }
 
   const renderer = new GameRenderer(app);
+  await renderer.loadAssets();
   const controller = new GameController(config, renderer);
 
   const startButton = document.getElementById("start-button");
