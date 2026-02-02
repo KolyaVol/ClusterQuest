@@ -27,6 +27,7 @@ export class GameRenderer {
   private cellDisplays: Map<string, CellDisplay> = new Map();
   private spritesheet: PIXI.Spritesheet | null = null;
   private iconNames: string[] = ["gem", "potion", "sword", "scroll", "bow"];
+  private hoveredCell: CellDisplay | null = null;
 
   constructor(app: PIXI.Application) {
     this.app = app;
@@ -45,6 +46,7 @@ export class GameRenderer {
 
     this.container.removeChildren();
     this.stopAllAnimations();
+    this.hoveredCell = null;
 
     const clusterCells = new Set<string>();
     clusters.forEach((cluster) => {
@@ -127,10 +129,49 @@ export class GameRenderer {
           });
         }
 
+        cellContainer.eventMode = "static";
+        cellContainer.cursor = "pointer";
+        cellContainer.on("pointerover", () =>
+          this.onCellHoverStart(cellDisplay),
+        );
+        cellContainer.on("pointerout", () => this.onCellHoverEnd(cellDisplay));
+
         this.container.addChild(cellContainer);
         this.cellDisplays.set(`${x},${y}`, cellDisplay);
       }
     }
+  }
+
+  private onCellHoverStart(cellDisplay: CellDisplay): void {
+    if (this.hoveredCell && this.hoveredCell !== cellDisplay) {
+      this.resetCellScale(this.hoveredCell);
+    }
+
+    const { container, stopPulse } = cellDisplay;
+
+    if (stopPulse) {
+      stopPulse();
+      cellDisplay.stopPulse = undefined;
+    }
+
+    this.hoveredCell = cellDisplay;
+
+    this.animationManager.animateScaleTo(container, container.scale.x, 1.25);
+  }
+
+  private onCellHoverEnd(cellDisplay: CellDisplay): void {
+    if (this.hoveredCell !== cellDisplay) {
+      return;
+    }
+
+    this.resetCellScale(cellDisplay);
+    this.hoveredCell = null;
+  }
+
+  private resetCellScale(cellDisplay: CellDisplay): void {
+    const { container } = cellDisplay;
+
+    this.animationManager.animateScaleTo(container, container.scale.x, 1);
   }
 
   private fadeOutCurrentGrid(): void {
@@ -146,6 +187,7 @@ export class GameRenderer {
       }
     });
     this.cellDisplays.clear();
+    this.hoveredCell = null;
   }
 
   clear(): void {

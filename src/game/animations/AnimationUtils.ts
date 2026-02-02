@@ -123,6 +123,26 @@ export class AnimationManager {
     }
   }
 
+  animateScaleTo(
+    object: DisplayObject,
+    startScale: number,
+    endScale: number,
+    duration: number = 120,
+    easing: (t: number) => number = (t) => t,
+  ): void {
+    object.scale.set(startScale);
+
+    this.animations.add({
+      object,
+      startTime: performance.now(),
+      duration,
+      startValue: startScale,
+      endValue: endScale,
+      property: "scale",
+      easing,
+    });
+  }
+
   animatePulse(
     object: DisplayObject,
     minScale: number = 0.95,
