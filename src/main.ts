@@ -25,10 +25,26 @@ async function init() {
   }
 
   const renderer = new GameRenderer(app);
-  await renderer.loadAssets();
+  const loader = document.getElementById("loader");
+  const startButton = document.getElementById("start-button");
+
+  if (loader) {
+    loader.style.display = "flex";
+  }
+
+  try {
+    await renderer.loadAssets();
+  } finally {
+    if (loader) {
+      loader.style.display = "none";
+    }
+    if (startButton) {
+      startButton.classList.remove("hidden");
+    }
+  }
+
   const controller = new GameController(config, renderer);
 
-  const startButton = document.getElementById("start-button");
   if (startButton) {
     startButton.addEventListener("click", () => {
       if (controller.getState() === GameState.SHOWING_CLUSTERS) {
