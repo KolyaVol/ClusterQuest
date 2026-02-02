@@ -2,6 +2,16 @@ import * as PIXI from "pixi.js";
 
 type DisplayObject = PIXI.Graphics | PIXI.Container;
 
+interface ScaleInOptions {
+  duration?: number;
+  startScale?: number;
+  endScale?: number;
+  easing?: (t: number) => number;
+  animateAlpha?: boolean;
+  startAlpha?: number;
+  endAlpha?: number;
+}
+
 interface AnimationState {
   object: DisplayObject;
   startTime: number;
@@ -16,10 +26,7 @@ interface DelayedAnimation {
   object: DisplayObject;
   delay: number;
   startTime: number;
-  duration: number;
-  startScale: number;
-  endScale: number;
-  easing: (t: number) => number;
+  options: ScaleInOptions;
 }
 
 export class AnimationManager {
@@ -39,13 +46,7 @@ export class AnimationManager {
     this.delayedAnimations.forEach((delayed) => {
       const elapsed = currentTime - delayed.startTime;
       if (elapsed >= delayed.delay) {
-        this.animateScaleIn(
-          delayed.object,
-          delayed.duration,
-          delayed.startScale,
-          delayed.endScale,
-          delayed.easing,
-        );
+        this.animateScaleIn(delayed.object, delayed.options);
         this.delayedAnimations.delete(delayed);
       }
     });
@@ -82,18 +83,21 @@ export class AnimationManager {
     });
   }
 
-  animateScaleIn(
-    object: DisplayObject,
-    duration: number = 300,
-    startScale: number = 0,
-    endScale: number = 1,
-    easing: (t: number) => number = easeOutBack,
-  ): void {
+  animateScaleIn(object: DisplayObject, options: ScaleInOptions = {}): void {
+    const {
+      duration = 300,
+      startScale = 0,
+      endScale = 1,
+      easing = easeOutBack,
+      animateAlpha = true,
+      startAlpha = 0,
+      endAlpha = 1,
+    } = options;
+
     const targetScale =
       object.scale.x !== 1 && endScale === 1 ? object.scale.x : endScale;
 
     object.scale.set(startScale);
-    object.alpha = 0;
 
     this.animations.add({
       object,
@@ -105,15 +109,18 @@ export class AnimationManager {
       easing,
     });
 
-    this.animations.add({
-      object,
-      startTime: performance.now(),
-      duration,
-      startValue: 0,
-      endValue: 1,
-      property: "alpha",
-      easing,
-    });
+    if (animateAlpha) {
+      object.alpha = startAlpha;
+      this.animations.add({
+        object,
+        startTime: performance.now(),
+        duration,
+        startValue: startAlpha,
+        endValue: endAlpha,
+        property: "alpha",
+        easing,
+      });
+    }
   }
 
   animatePulse(
@@ -137,6 +144,36 @@ export class AnimationManager {
     };
   }
 
+  hideNotClusters(
+    object: DisplayObject,
+    duration: number = 200,
+    targetAlpha: number = 0.5,
+  ): () => void {
+    const baseAlpha = object.alpha;
+
+    this.animations.add({
+      object,
+      startTime: performance.now(),
+      duration,
+      startValue: baseAlpha,
+      endValue: targetAlpha,
+      property: "alpha",
+      easing: (t) => t,
+    });
+
+    return () => {
+      this.animations.add({
+        object,
+        startTime: performance.now(),
+        duration,
+        startValue: object.alpha,
+        endValue: baseAlpha,
+        property: "alpha",
+        easing: (t) => t,
+      });
+    };
+  }
+
   animateFadeOut(object: DisplayObject, duration: number = 200): void {
     const startAlpha = object.alpha;
     this.animations.add({
@@ -153,19 +190,13 @@ export class AnimationManager {
   animateScaleInDelayed(
     object: DisplayObject,
     delay: number,
-    duration: number = 300,
-    startScale: number = 0,
-    endScale: number = 1,
-    easing: (t: number) => number = easeOutBack,
+    options: ScaleInOptions = {},
   ): void {
     this.delayedAnimations.add({
       object,
       delay,
       startTime: performance.now(),
-      duration,
-      startScale,
-      endScale,
-      easing,
+      options,
     });
   }
 

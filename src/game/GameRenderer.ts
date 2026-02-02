@@ -107,6 +107,8 @@ export class GameRenderer {
           cellDisplay.sprite = sprite;
         }
 
+        const delay = (x + y) * 15;
+
         if (isInCluster) {
           const stopPulse = this.animationManager.animatePulse(
             cellContainer,
@@ -115,21 +117,18 @@ export class GameRenderer {
             1200,
           );
           cellDisplay.stopPulse = stopPulse;
+
+          this.animationManager.animateScaleInDelayed(cellContainer, delay);
         } else {
-          cellContainer.alpha = 0.5;
+          this.animationManager.hideNotClusters(cellContainer, 200, 0.5);
+
+          this.animationManager.animateScaleInDelayed(cellContainer, delay, {
+            animateAlpha: false,
+          });
         }
 
         this.container.addChild(cellContainer);
         this.cellDisplays.set(`${x},${y}`, cellDisplay);
-
-        const delay = (x + y) * 15;
-        this.animationManager.animateScaleInDelayed(
-          cellContainer,
-          delay,
-          300,
-          0,
-          1,
-        );
       }
     }
   }
