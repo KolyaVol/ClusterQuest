@@ -95,8 +95,8 @@ export class GameRenderer {
           const sprite = new PIXI.Sprite(this.spritesheet.textures[iconName]);
 
           const scale = Math.min(
-            (this.cellSize * 0.65) / sprite.width,
-            (this.cellSize * 0.65) / sprite.height,
+            this.cellSize / sprite.width,
+            this.cellSize / sprite.height,
           );
           sprite.scale.set(scale);
 
