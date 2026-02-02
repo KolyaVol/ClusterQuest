@@ -7,7 +7,6 @@ interface CellDisplay {
   container: PIXI.Container;
   graphics: PIXI.Graphics;
   sprite?: PIXI.Sprite;
-  text?: PIXI.Text;
   stopPulse?: () => void;
 }
 
@@ -25,7 +24,6 @@ export class GameRenderer {
     0xffd700, 0xffb900, 0xffa500, 0xffcc00, 0xffe135, 0xffc300, 0xffd93d,
     0xffaa00,
   ];
-  private clusterTextStyle: PIXI.TextStyle;
   private cellDisplays: Map<string, CellDisplay> = new Map();
   private spritesheet: PIXI.Spritesheet | null = null;
   private iconNames: string[] = ["gem", "potion", "sword", "scroll", "bow"];
@@ -35,15 +33,6 @@ export class GameRenderer {
     this.container = new PIXI.Container();
     this.app.stage.addChild(this.container);
     this.animationManager = new AnimationManager(app);
-
-    this.clusterTextStyle = new PIXI.TextStyle({
-      fontFamily: "Arial",
-      fontSize: 32,
-      fontWeight: "bold",
-      fill: 0xffffff,
-      stroke: 0x000000,
-      align: "center",
-    });
   }
 
   async loadAssets(): Promise<void> {
@@ -119,15 +108,6 @@ export class GameRenderer {
         }
 
         if (isInCluster) {
-          const text = new PIXI.Text({
-            text: "!",
-            style: this.clusterTextStyle,
-          });
-          text.anchor.set(0.5);
-          text.position.set(this.cellSize / 2, this.cellSize / 2);
-          // cellContainer.addChild(text);
-          cellDisplay.text = text;
-
           const stopPulse = this.animationManager.animatePulse(
             cellContainer,
             0.98,

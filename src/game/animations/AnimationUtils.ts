@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 
-type DisplayObject = PIXI.Graphics | PIXI.Text | PIXI.Container;
+type DisplayObject = PIXI.Graphics | PIXI.Container;
 
 interface AnimationState {
   object: DisplayObject;
